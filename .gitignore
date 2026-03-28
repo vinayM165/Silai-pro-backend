@@ -1,0 +1,25 @@
+# ─── Build Output ───
+target/
+
+# ─── Local Maven Repo (project-scoped) ───
+.m2/
+
+# ─── IDE Files ───
+.idea/
+*.iml
+.vscode/
+*.class
+
+# ─── Logs ───
+*.log
+server_error.log
+test_output.log
+
+# ─── Environment / Secrets ─── 
+# Never commit real credentials!
+application-dev.properties
+# application-prod.properties  <-- Include this as it now uses env var placeholders
+
+# ─── OS Files ───
+.DS_Store
+Thumbs.db

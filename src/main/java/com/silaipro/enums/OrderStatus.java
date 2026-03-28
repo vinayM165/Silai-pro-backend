@@ -1,0 +1,2 @@
+package com.silaipro.enums;
+public enum OrderStatus { RECEIVED, CUTTING, STITCHING, TRIAL_PENDING, ALTERATION, READY, DELIVERED, CANCELLED }
