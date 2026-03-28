@@ -170,7 +170,7 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:8095",
+			"value": "https://silai-pro-backend.onrender.com",
 			"type": "string"
 		},
 		{
