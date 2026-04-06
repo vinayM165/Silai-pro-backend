@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS measurement_values (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     measurement_id BIGINT NOT NULL,
     field_id BIGINT NOT NULL,
-    value VARCHAR(255),
+    field_value VARCHAR(255),
     FOREIGN KEY (measurement_id) REFERENCES measurements(id) ON DELETE CASCADE,
     FOREIGN KEY (field_id) REFERENCES measurement_fields(id)
 );

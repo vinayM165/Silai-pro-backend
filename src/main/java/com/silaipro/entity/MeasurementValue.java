@@ -21,5 +21,6 @@ public class MeasurementValue {
     @JoinColumn(name = "field_id", nullable = false)
     private MeasurementField field;
 
-    private String value;
+    @Column(name = "field_value")
+    private String fieldValue;
 }

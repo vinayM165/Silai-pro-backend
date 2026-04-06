@@ -1,5 +1,9 @@
 package com.silaipro.controller;
 
+import org.springframework.test.annotation.DirtiesContext;
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.silaipro.dto.auth.LoginRequest;
 import com.silaipro.dto.auth.SignupRequest;
@@ -26,8 +30,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @DisplayName("Auth API Integration Tests")
+
+
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class AuthControllerTest {
 
     @Autowired
@@ -267,6 +274,58 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isForbidden());
+    }
+
+    // ─────────────── PIN LOGIN TESTS ───────────────
+
+    @Test
+    @DisplayName("Login: SUCCESS with PIN")
+    void testLogin_WithPin() throws Exception {
+        // First ensure user has a PIN hash
+        User user = userRepository.findByPhone("9876543210").orElseThrow();
+        user.setPinHash(passwordEncoder.encode("1234"));
+        userRepository.save(user);
+
+        LoginRequest req = new LoginRequest();
+        req.setLogin("9876543210");
+        req.setPin("1234");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.user.name").value("Test Admin"));
+    }
+
+    @Test
+    @DisplayName("Login: ERROR 401 with wrong PIN")
+    void testLogin_WrongPin() throws Exception {
+        User user = userRepository.findByPhone("9876543210").orElseThrow();
+        user.setPinHash(passwordEncoder.encode("1234"));
+        userRepository.save(user);
+
+        LoginRequest req = new LoginRequest();
+        req.setLogin("9876543210");
+        req.setPin("9999");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Login: ERROR 401 when no PIN set for user")
+    void testLogin_NoPinSet() throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setLogin("9876543210");
+        req.setPin("1234");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
     }
 
     // ─────────────── REFRESH TOKEN TESTS ───────────────
