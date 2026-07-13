@@ -399,9 +399,9 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Logout: ERROR 403 with no token (Spring Security blocks unauthenticated requests)")
+    @DisplayName("Logout: ERROR 401 with no token")
     void testLogout_WithoutToken() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))
-                .andExpect(status().isForbidden()); // Spring Security 6 returns 403 for missing token
+                .andExpect(status().isUnauthorized());
     }
 }

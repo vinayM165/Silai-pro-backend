@@ -132,13 +132,13 @@ public class InvoicePaymentTest {
         invReq.setOrderId(orderId);
         invReq.setDueDate(LocalDate.now().plusDays(2));
 
-        MvcResult invResult = mockMvc.perform(post("/api/billing/invoices")
+        MvcResult invResult = mockMvc.perform(post("/api/invoices")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invReq)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.invoiceNo").exists())
-                .andExpect(jsonPath("$.paymentStatus").value("UNPAID"))
+                .andExpect(jsonPath("$.paymentStatus").value("PENDING"))
                 .andExpect(jsonPath("$.balanceDue").value(2000))
                 .andReturn();
 
@@ -151,14 +151,14 @@ public class InvoicePaymentTest {
         payReq.setMode(PaymentMode.CASH);
         payReq.setPaymentDate(LocalDate.now());
 
-        mockMvc.perform(post("/api/billing/payments")
+        mockMvc.perform(post("/api/payments")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(payReq)))
                 .andExpect(status().isCreated());
 
         // Check Invoice status
-        mockMvc.perform(get("/api/billing/invoices/" + invoiceId).header("Authorization", adminToken))
+        mockMvc.perform(get("/api/invoices/" + invoiceId).header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentStatus").value("PARTIAL"))
                 .andExpect(jsonPath("$.totalPaid").value(500))
@@ -166,14 +166,14 @@ public class InvoicePaymentTest {
 
         // 3. Record Full Payment
         payReq.setAmount(new BigDecimal("1500"));
-        mockMvc.perform(post("/api/billing/payments")
+        mockMvc.perform(post("/api/payments")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(payReq)))
                 .andExpect(status().isCreated());
 
         // Check Final Invoice status
-        mockMvc.perform(get("/api/billing/invoices/" + invoiceId).header("Authorization", adminToken))
+        mockMvc.perform(get("/api/invoices/" + invoiceId).header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentStatus").value("PAID"))
                 .andExpect(jsonPath("$.balanceDue").value(0))

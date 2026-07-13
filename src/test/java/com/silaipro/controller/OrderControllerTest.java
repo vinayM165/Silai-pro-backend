@@ -157,17 +157,39 @@ public class OrderControllerTest {
                 .andReturn();
         Long orderId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
 
-        // Transition: RECEIVED -> STITCHING
+        // Transition: RECEIVED -> CUTTING
+        java.util.Map<String, String> statusMap1 = java.util.Map.of("status", "CUTTING");
         mockMvc.perform(patch("/api/orders/" + orderId + "/status")
                 .header("Authorization", adminToken)
-                .param("status", "STITCHING"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusMap1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CUTTING"));
+
+        // Transition: CUTTING -> STITCHING
+        java.util.Map<String, String> statusMap2 = java.util.Map.of("status", "STITCHING");
+        mockMvc.perform(patch("/api/orders/" + orderId + "/status")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusMap2)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("STITCHING"));
 
-        // Transition: STITCHING -> DELIVERED
+        // Transition: STITCHING -> READY
+        java.util.Map<String, String> statusMap3 = java.util.Map.of("status", "READY");
         mockMvc.perform(patch("/api/orders/" + orderId + "/status")
                 .header("Authorization", adminToken)
-                .param("status", "DELIVERED"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusMap3)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("READY"));
+
+        // Transition: READY -> DELIVERED
+        java.util.Map<String, String> statusMap4 = java.util.Map.of("status", "DELIVERED");
+        mockMvc.perform(patch("/api/orders/" + orderId + "/status")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusMap4)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DELIVERED"));
     }
@@ -175,9 +197,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Dashboard: Get Order Counts")
     void testGetOrderCounts() throws Exception {
-        mockMvc.perform(get("/api/orders/dashboard-counts")
+        mockMvc.perform(get("/api/orders/dashboard")
                 .header("Authorization", adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.RECEIVED").exists());
+                .andExpect(jsonPath("$.statusCounts.RECEIVED").exists());
     }
 }

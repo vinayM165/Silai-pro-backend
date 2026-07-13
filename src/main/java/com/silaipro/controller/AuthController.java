@@ -103,20 +103,23 @@ public class AuthController {
     @Operation(summary = "Refresh access token using a refresh token")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
         String refreshToken = request.getRefreshToken();
-        String username = jwtUtil.extractUsername(refreshToken);
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+            if (username != null && jwtUtil.validateToken(refreshToken, userDetailsService.loadUserByUsername(username))) {
+                User user = userRepository.findByPhoneOrEmail(username)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                
+                UserDetails userDetails = new CustomUserDetails(user);
+                String newAccessToken = jwtUtil.generateAccessToken(userDetails);
 
-        if (username != null && jwtUtil.validateToken(refreshToken, userDetailsService.loadUserByUsername(username))) {
-            User user = userRepository.findByPhoneOrEmail(username)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
-            
-            UserDetails userDetails = new CustomUserDetails(user);
-            String newAccessToken = jwtUtil.generateAccessToken(userDetails);
-
-            return ResponseEntity.ok(AuthResponse.builder()
-                    .accessToken(newAccessToken)
-                    .refreshToken(refreshToken)
-                    .user(mapToDto(user))
-                    .build());
+                return ResponseEntity.ok(AuthResponse.builder()
+                        .accessToken(newAccessToken)
+                        .refreshToken(refreshToken)
+                        .user(mapToDto(user))
+                        .build());
+            }
+        } catch (Exception e) {
+            // Fall through to throw 401
         }
 
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");

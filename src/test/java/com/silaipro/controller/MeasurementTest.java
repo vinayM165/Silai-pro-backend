@@ -115,7 +115,7 @@ public class MeasurementTest {
         // Seed Category
         CategoryRequest catReq = new CategoryRequest();
         catReq.setName("Shirt");
-        MvcResult catResult = mockMvc.perform(post("/api/measurement-config/categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(catReq))).andReturn();
+        MvcResult catResult = mockMvc.perform(post("/api/measurement-categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(catReq))).andReturn();
         categoryId = objectMapper.readTree(catResult.getResponse().getContentAsString()).get("id").asLong();
 
         // Seed Field
@@ -123,7 +123,7 @@ public class MeasurementTest {
         fieldReq.setFieldName("Chest");
         fieldReq.setFieldType(FieldType.NUMBER);
         fieldReq.setUnit("inches");
-        MvcResult fieldResult = mockMvc.perform(post("/api/measurement-config/categories/" + categoryId + "/fields").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(fieldReq))).andReturn();
+        MvcResult fieldResult = mockMvc.perform(post("/api/measurement-fields?categoryId=" + categoryId).header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(fieldReq))).andReturn();
         fieldId = objectMapper.readTree(fieldResult.getResponse().getContentAsString()).get("id").asLong();
     }
 
@@ -147,7 +147,7 @@ public class MeasurementTest {
                 .andExpect(jsonPath("$.values", hasSize(1)))
                 .andExpect(jsonPath("$.values[0].value").value("42"));
 
-        mockMvc.perform(get("/api/measurements/customer/" + customerId)
+        mockMvc.perform(get("/api/customers/" + customerId + "/measurements")
                 .header("Authorization", adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
